@@ -4,7 +4,7 @@ import '../styles/app.css'
 // Import libraries we need.
 import { default as Web3 } from 'web3'
 import { default as contract } from 'truffle-contract'
-import { default as RelayClient } from 'tabookey-gasless'
+import { RelayClient, RelayProvider } from 'tabookey-gasless'
 
 // Import our contract artifacts and turn them into usable abstractions.
 import metaCoinArtifact from '../../build/contracts/MetaCoin.json'
@@ -46,17 +46,17 @@ const App = {
   start: function () {
     const self = this
     document.getElementById('checkbox_use_metamask').checked = getCookie("use_metamask")
-    var relayclient = new RelayClient(web3, {
+    var relayprovider = new RelayProvider(web3.currentProvider, {
+      force_gasLimit: 5000000,
       verbose: true,
       txfee: 12,
-      force_gasLimit: 1000000
     })
 
+    let relayclient = relayprovider.relayClient
     this.MetaCoin = MetaCoin
     // Unset network (may change when toggling MetaMask on/off)
     // Bootstrap the MetaCoin abstraction for Use.
-    MetaCoin.setProvider(web3.currentProvider)
-    relayclient.hook(MetaCoin)
+    MetaCoin.setProvider(relayprovider)
 
     // Get the initial account balance so it can be displayed.
     web3.eth.getAccounts(function (err, accs) {
@@ -177,8 +177,9 @@ window.addEventListener('load', function () {
       ' More info here: http://truffleframework.com/tutorials/truffle-and-metamask'
     )
     // fallback - use your fallback strategy (local node / hosted node + in-dapp id mgmt / fail)
-    // window.web3 = new Web3(new Web3.providers.HttpProvider('http://127.0.0.1:9545'))
     window.web3 = new Web3(new Web3.providers.HttpProvider('http://127.0.0.1:8545'))
+    // console.log( "using ropsten:"); window.web3 = new Web3(new Web3.providers.HttpProvider('https://ropsten.infura.io/v3/c3422181d0594697a38defe7706a1e5b'))
+
   }
 
   App.start()

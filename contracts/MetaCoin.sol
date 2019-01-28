@@ -12,7 +12,8 @@ import "./ConvertLib.sol";
 contract MetaCoin is RelayRecipient
  {
 
-	function accept_relayed_call(address /*relay*/, address from, bytes /*encoded_function*/, uint /*gas_price*/, uint /*transaction_fee*/ ) external view returns(uint32) {
+    function accept_relayed_call(address /*relay*/, address from, bytes memory /*encoded_function*/, uint /*gas_price*/, uint /*transaction_fee*/ ) public view returns(uint32) {
+	
 
 		return 0;
     	//allow free calls for token holders..
@@ -23,7 +24,7 @@ contract MetaCoin is RelayRecipient
 	}
 
 	//nothing to be done post-call. still, we must implement this method.
-	function post_relayed_call(address /*relay*/ , address /*from*/, bytes /*encoded_function*/, bool /*success*/, uint /*used_gas*/, uint /*transaction_fee*/ ) external {
+    function post_relayed_call(address relay, address from, bytes memory encoded_function, bool success, uint used_gas, uint transaction_fee ) public {
 	}
 
 	mapping (address => uint) balances;
@@ -33,9 +34,9 @@ contract MetaCoin is RelayRecipient
 
 	event Transfer(address indexed _from, address indexed _to, uint256 _value);
 
-	constructor() public {
+	constructor(RelayHub hub) public {
 		balances[tx.origin] = 10000;
-		init_relay_hub(RelayHub(0x254dffcd3277C0b1660F6d42EFbB754edaBAbC2B)); //local
+		init_relay_hub(hub);
 	}
 
 	function sendCoin(address receiver, uint amount) public returns(bool sufficient) {

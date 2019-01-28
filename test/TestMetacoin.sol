@@ -3,6 +3,7 @@ pragma solidity ^0.4.2;
 import "truffle/Assert.sol";
 import "truffle/DeployedAddresses.sol";
 import "../contracts/MetaCoin.sol";
+import "tabookey-gasless/contracts/RelayHub.sol";
 
 contract TestMetacoin {
 
@@ -15,7 +16,8 @@ contract TestMetacoin {
   }
 
   function testInitialBalanceWithNewMetaCoin() public {
-    MetaCoin meta = new MetaCoin();
+    RelayHub rhub = RelayHub(DeployedAddresses.RelayHub());
+    MetaCoin meta = new MetaCoin(rhub);
 
     uint expected = 10000;
 

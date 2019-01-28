@@ -1,28 +1,27 @@
+var config = require( '../truffle.js')
 var ConvertLib = artifacts.require('./ConvertLib.sol')
 var MetaCoin = artifacts.require('./MetaCoin.sol')
 var RelayHub = artifacts.require('RelayHub')
 
+
 module.exports = function (deployer) {
-  var meta
-  deployer.deploy(ConvertLib)
-  deployer.link(ConvertLib, MetaCoin)
-  future = deployer.deploy(MetaCoin)
-  if ( web3.version.network < 100000 ) {
-  	console.log( "not ganache. not attempting to fund and depositFor.." )
-  	return
-  }
-  future.then(dep => {
-    meta = dep
-    return RelayHub.at('0x254dffcd3277c0b1660f6d42efbb754edababc2b')
-  }).then(rhub => {
-    console.log('added deposit for META ' + meta.address)
-    return rhub.depositFor(meta.address, { value: 1e17 })
-  }).then(ret => {
-    console.log('depositFor completed ')
-    return meta.get_recipient_balance.call()
-  }).then((value) => {
-    console.log('getDeposit(', meta.address, ') = ', value.toNumber())
-  }).catch(e => {
-    console.log('error:', e)
-  })
+
+    //TODO: find a better way to tell which network we're using...
+    var cmdline = process.argv.join(" ")
+    var net
+    var hubaddr
+    if ( cmdline.indexOf('ropsten') > 0 ) {
+        hubaddr='0x1349584869A1C7b8dc8AE0e93D8c15F5BB3B4B87' // ropsten 0.3.1
+        net='ropsten'
+    }
+    else {
+        hubaddr="0x254dffcd3277C0b1660F6d42EFbB754edaBAbC2B" //local
+        net='private'
+    }
+
+    console.log( 'Using network ', net, 'hub-addr=',hubaddr )
+
+    deployer.deploy(ConvertLib);
+    deployer.link(ConvertLib, MetaCoin);
+    deployer.deploy(MetaCoin, hubaddr);
 }
