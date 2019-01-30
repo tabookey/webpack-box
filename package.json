@@ -44,7 +44,7 @@
     "webpack-dev-server": "^3.1.4"
   },
   "dependencies": {
-    "tabookey-gasless": "^0.3.1",
+    "tabookey-gasless": "^0.3.2",
     "truffle-hdwallet-provider": "^1.0.2"
   }
 }

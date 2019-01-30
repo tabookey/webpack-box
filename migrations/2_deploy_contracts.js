@@ -4,7 +4,7 @@ var MetaCoin = artifacts.require('./MetaCoin.sol')
 var RelayHub = artifacts.require('RelayHub')
 
 
-module.exports = function (deployer) {
+module.exports = function (deployer, network) {
 
     //TODO: find a better way to tell which network we're using...
     var cmdline = process.argv.join(" ")
@@ -23,5 +23,17 @@ module.exports = function (deployer) {
 
     deployer.deploy(ConvertLib);
     deployer.link(ConvertLib, MetaCoin);
-    deployer.deploy(MetaCoin, hubaddr);
+    let dep = deployer.deploy(MetaCoin, hubaddr)
+
+    if ( network!= 'development' ) {
+ 	dep.then(()=>{
+ 	  console.log( "=== Make sure to use http://gsn.tabookey.com/webtools/contractmanager.html" )
+	  console.log( "===  to make a deposit for ",MetaCoin.address, "on network", network )
+	})
+    } else {
+	dep.then(()=>RelayHub.at(hubaddr))
+	.then(hub=>hub.depositFor(MetaCoin.address, {value: 1e17} ))
+	.then(()=>console.log( "deposited." ) )
+	.catch(e=>console.log( "wtf?",e) )
+    }
 }
