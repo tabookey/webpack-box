@@ -12,6 +12,29 @@ import metaCoinArtifact from '../../build/contracts/MetaCoin.json'
 // MetaCoin is our usable abstraction, which we'll use through the code below.
 const MetaCoin = contract(metaCoinArtifact)
 
+const networks= {
+  ropsten: {
+    baseurl:"https://ropsten.etherscan.io/",
+    nodeurl:"https://ropsten.infura.io/v3/c3422181d0594697a38defe7706a1e5b"
+
+  } ,
+  xdai: {
+    baseurl:"https://blockscout.com/poa/dai/",
+    nodeurl:"https://dai.poa.network"
+
+  } ,
+  development: {
+    //no urls for dev... just for test
+    baseurl:"https://ropsten.etherscan.io/",
+    nodeurl:"http://localhost:8545"
+
+  }
+}
+
+let network = networks.xdai
+
+
+const appversion = "0.2"
 // The following code is simple to show off interacting with your contracts.
 // As your needs grow you will likely need to change its form and structure.
 // For application bootstrapping, check out window.addEventListener below.
@@ -46,9 +69,12 @@ const App = {
   start: function () {
     const self = this
     document.getElementById('checkbox_use_metamask').checked = getCookie("use_metamask")
+
+    let debugMode = window.location.href.indexOf("debug")>=0
+
     var relayprovider = new RelayProvider(web3.currentProvider, {
       force_gasLimit: 5000000,
-      verbose: true,
+      verbose: debugMode,
       txfee: 12,
     })
 
@@ -87,9 +113,18 @@ const App = {
     })
   },
 
-  setStatus: function (message) {
-    const status = document.getElementById('status')
+  setStatus: function (message,tx) {
+    let status = document.getElementById('status')
+    if ( tx ) {
+      message = message+"<br>"+this.link("/tx/"+tx, tx)
+    }
     status.innerHTML = message
+  },
+
+  link : function(path, text) {
+    let ret = "<a href='"+network.baseurl+path+"'>"+text+"<a/>"
+    console.log( "link=", ret)
+    return ret
   },
 
   refreshBalance: function () {
@@ -104,6 +139,12 @@ const App = {
       balanceElement.innerHTML = value.valueOf()
       const addressElement = document.getElementById('address')
       addressElement.innerHTML = account.valueOf()
+
+      return meta.get_hub_addr.call()
+    }).then(hubaddr=>{
+      const hublink = document.getElementById('hublink')
+      hublink.innerHTML = this.link("/address/"+hubaddr, "here")
+
     }).catch(function (e) {
       console.log(e)
       if (e.message.includes("MetaCoin has not been deployed to detected network")) {
@@ -125,8 +166,8 @@ const App = {
     MetaCoin.deployed().then(function (instance) {
       meta = instance
       return meta.sendCoin(receiver, amount, { from: account })
-    }).then(function () {
-      self.setStatus('Transaction complete!')
+    }).then(function (ret) {
+      self.setStatus('Transaction complete!' ,ret.tx)
       self.refreshBalance()
     }).catch(function (e) {
       console.log(e)
@@ -177,9 +218,10 @@ window.addEventListener('load', function () {
       ' More info here: http://truffleframework.com/tutorials/truffle-and-metamask'
     )
     // fallback - use your fallback strategy (local node / hosted node + in-dapp id mgmt / fail)
-    window.web3 = new Web3(new Web3.providers.HttpProvider('http://127.0.0.1:8545'))
-    // console.log( "using ropsten:"); window.web3 = new Web3(new Web3.providers.HttpProvider('https://ropsten.infura.io/v3/c3422181d0594697a38defe7706a1e5b'))
+    //window.web3 = new Web3(new Web3.providers.HttpProvider('http://127.0.0.1:8545'))
+    console.log( "using network:"+network.nodeurl); window.web3 = new Web3(new Web3.providers.HttpProvider(network.nodeurl))
 
+    console.log( "appversion: "+ appversion )
   }
 
   App.start()
